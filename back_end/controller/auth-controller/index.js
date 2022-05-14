@@ -8,14 +8,12 @@ const {
 
 let arrRefreshToken = [];
 
-
-
 exports.register = async (req, res) => {
   if (!req.body) {
     return res.status(400).json({
       status: "400",
       message: "Content can not be empty",
-      result: null,
+      result: [],
     });
   } else {
     const { error } = registerValidation(req.body);
@@ -23,7 +21,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({
         status: "400",
         message: error.details[0].message,
-        result: null,
+        result: [],
       });
 
     //check email
@@ -32,7 +30,7 @@ exports.register = async (req, res) => {
       return res.status(400).send({
         status: "400",
         message: "Email already exists",
-        result: null,
+        result: [],
       });
     //hash password
     const salt = await bcrypt.genSalt(10);
@@ -60,7 +58,7 @@ exports.login = async (req, res) => {
     return res.status(400).json({
       status: "400",
       message: "Content can not be empty",
-      result: null,
+      result: [],
     });
   } else {
     //validate the data
@@ -68,20 +66,20 @@ exports.login = async (req, res) => {
     if (error)
       return res
         .status(400)
-        .json({ status: 400, message: error.details[0].message, result: null });
+        .json({ status: 400, message: error.details[0].message, result: [] });
 
     const user = await usersDB.findOne({ email: req.body.email });
     if (!user) {
       return res
         .status(400)
-        .json({ status: 400, message: "user not found", result: null });
+        .json({ status: 400, message: "user not found", result: [] });
     }
     //check password
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass)
       return res
         .status(400)
-        .json({ status: 400, message: "Password incorrect", result: null });
+        .json({ status: 400, message: "Password incorrect", result: [] });
 
     const { _id, name, email, role, ...rest } = user;
 
@@ -90,7 +88,7 @@ exports.login = async (req, res) => {
       { _id, name, email, role },
       process.env.TOKEN_SECRET,
       {
-        expiresIn: "20s",
+        expiresIn: "1d",
       }
     );
     const refreshToken = jwt.sign(
