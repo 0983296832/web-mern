@@ -7,5 +7,7 @@ route.get("/:id", verify, controller.findById);
 route.post("/get-name", verify, controller.findByName);
 route.put("/update/:id", verify, controller.updateById);
 route.delete("/delete/:id", verify, controller.deleteById);
+route.post("/upload/:id", verify, controller.upload);
+route.delete("/delete-image/:id", verify, controller.deleteImage);
 
 module.exports = route;

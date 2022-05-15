@@ -22,9 +22,7 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
   },
-  image: {
-    type: String,
-  },
+  image: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
   sex: {
     type: String,
   },

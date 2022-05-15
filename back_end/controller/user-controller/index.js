@@ -1,6 +1,8 @@
 const usersDB = require("../../models/userModel");
 const bcrypt = require("bcryptjs");
 const { passwordValidation } = require("../../validate/validate");
+const cloudinary = require("../../helper/cloudinaryConfig");
+const ImageModel = require("../../models/imageModel");
 
 exports.findAll = async (req, res) => {
   try {
@@ -19,7 +21,6 @@ exports.findAll = async (req, res) => {
   }
 };
 exports.findByName = async (req, res) => {
-  console.log("hi");
   if (!req.body.name) {
     return res.status(400).json({
       status: "400",
@@ -127,5 +128,89 @@ exports.deleteById = async (req, res) => {
       status: "400",
       message: error.message,
     });
+  }
+};
+// exports.deleteById = async (req, res) => {
+//   if (!req.params.id) {
+//     return res.status(400).json({
+//       status: "400",
+//       message: "delete user failed!",
+//     });
+//   }
+//   try {
+//     await usersDB.findByIdAndDelete(req.params.id);
+//     return res.status(200).json({
+//       status: "200",
+//       message: "delete user successfully!",
+//     });
+//   } catch (error) {
+//     return res.status(200).json({
+//       status: "400",
+//       message: error.message,
+//     });
+//   }
+// };
+
+exports.upload = async (req, res) => {
+  if (!req.body) {
+    return res
+      .status(400)
+      .json({ status: 400, message: "Content can not be empty!" });
+  }
+  try {
+    const id = req.params.id;
+    // Upload image to cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path);
+    // Create new img
+    let newImage = new ImageModel({
+      user_id: id,
+      imageUrl: result.url,
+      public_id: result.public_id,
+    });
+
+    // delete existing Image
+    await ImageModel.deleteOne({ user_id: id });
+    // Save img
+    const image = await newImage.save();
+    usersDB.findById(id, (err, result) => {
+      if (err) {
+        res.status(500).json({
+          success: "false",
+          message: "can not find product",
+        });
+      } else {
+        result.image = image;
+        result.save();
+      }
+    });
+    res.status(200).json({ status: "200", ...image });
+  } catch (err) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+exports.deleteImage = async (req, res) => {
+  try {
+    const imageId = req.params.id;
+    const img = await ImageModel.findById(imageId);
+    if (!img) {
+      return res
+        .status(400)
+        .json({ status: "400", message: "image not exists" });
+    } else {
+      // delete existing Image
+      await ImageModel.findByIdAndRemove(imageId);
+      // const result = await cloudinary.uploader.destroy(img.public_id);
+      await usersDB.findByIdAndUpdate(
+        img.id,
+        { image: "" },
+        {
+          useFindAndModify: false,
+          new: true,
+        }
+      );
+      return res.json({ result });
+    }
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
   }
 };

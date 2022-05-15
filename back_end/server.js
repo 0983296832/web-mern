@@ -2,6 +2,8 @@ require("dotenv").config({ path: "./config.env" });
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
+const upload = require("./untils/multer");
+
 // const cors = require("cors");
 const connectDB = require("./database/connect");
 
@@ -12,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 //midleware
+app.use(upload);
 // app.use(cors);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
