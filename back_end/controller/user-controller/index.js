@@ -160,7 +160,9 @@ exports.upload = async (req, res) => {
   try {
     const id = req.params.id;
     // Upload image to cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path);
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "user",
+    });
     // Create new img
     let newImage = new ImageModel({
       user_id: id,
@@ -183,7 +185,7 @@ exports.upload = async (req, res) => {
         result.save();
       }
     });
-    res.status(200).json({ status: "200", ...image });
+    res.status(200).json({ status: "200", result: { ...image._doc } });
   } catch (err) {
     return res.status(400).json({ status: "400", message: error.message });
   }
@@ -199,16 +201,16 @@ exports.deleteImage = async (req, res) => {
     } else {
       // delete existing Image
       await ImageModel.findByIdAndRemove(imageId);
-      // const result = await cloudinary.uploader.destroy(img.public_id);
+      const result = await cloudinary.uploader.destroy(img.public_id);
       await usersDB.findByIdAndUpdate(
-        img.id,
-        { image: "" },
+        img.user_id,
+        { image: null },
         {
           useFindAndModify: false,
           new: true,
         }
       );
-      return res.json({ result });
+      return res.status(200).json(result);
     }
   } catch (error) {
     return res.status(400).json({ status: "400", message: error.message });

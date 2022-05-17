@@ -5,8 +5,14 @@ const {
   registerValidation,
   loginValidation,
 } = require("../../validate/validate");
+const sendEmail = require("../../untils/sendEmail");
+const { passwordValidation } = require("../../validate/validate");
 
 let arrRefreshToken = [];
+let code = 600494;
+setInterval(() => {
+  code = Math.floor(100000 + Math.random() * 900000);
+}, 1000000);
 
 exports.register = async (req, res) => {
   if (!req.body) {
@@ -163,4 +169,91 @@ exports.refreshToken = async (req, res) => {
 exports.logout = (req, res) => {
   res.removeHeader("auth-token");
   return res.status(200).json({ status: "200", message: "logout success" });
+};
+exports.forgotPassword = async (req, res) => {
+  // Send Email to email provided but first check if user exists
+  const { email } = req.body;
+
+  try {
+    const user = await usersDB.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "404", message: "No email could not be sent" });
+    }
+
+    // Create reset url to email to provided email
+    const resetUrl = `http://localhost:3000/resetpassword`;
+    console.log(code);
+    // HTML Message
+    const message = `
+      <h1>You have requested a password reset</h1>
+      <h1>Your code: ${code}</h1> 
+    `;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Password Reset Request",
+        text: message,
+      });
+
+      return res.status(200).json({ status: 200, message: "Email Sent" });
+    } catch (err) {
+      return res.status(500).json({ status: "500", message: err.message });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: "500", message: err.message });
+  }
+};
+exports.resetPassword = async (req, res) => {
+  console.log(req.body.code);
+  try {
+    if (req.body.code != code) {
+      return res
+        .status(500)
+        .json({ status: "500", message: "code is not correct" });
+    }
+    const user = await usersDB.findOne({ email: req.body.email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "404", message: "No email could not found " });
+    }
+
+    //validate the password
+    const { error } = passwordValidation({ password: req.body.password });
+    if (error)
+      return res
+        .status(400)
+        .json({ status: 400, message: error.details[0].message, result: [] });
+    //hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    try {
+      const data = await usersDB.findByIdAndUpdate(
+        user._id,
+        { password: hashedPassword },
+        {
+          useFindAndModify: false,
+          new: true,
+        }
+      );
+      return res.status(200).json({
+        status: "200",
+        message: "change password successfully!",
+        result: data,
+      });
+    } catch (error) {
+      return res.status(200).json({
+        status: "400",
+        message: error.message,
+        result: [],
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: "500", message: err.message });
+  }
 };
