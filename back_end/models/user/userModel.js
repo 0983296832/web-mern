@@ -36,9 +36,6 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  comments: {
-    type: Array,
-  },
   orders: {
     type: Array,
   },

@@ -130,26 +130,6 @@ exports.deleteById = async (req, res) => {
     });
   }
 };
-// exports.deleteById = async (req, res) => {
-//   if (!req.params.id) {
-//     return res.status(400).json({
-//       status: "400",
-//       message: "delete user failed!",
-//     });
-//   }
-//   try {
-//     await usersDB.findByIdAndDelete(req.params.id);
-//     return res.status(200).json({
-//       status: "200",
-//       message: "delete user successfully!",
-//     });
-//   } catch (error) {
-//     return res.status(200).json({
-//       status: "400",
-//       message: error.message,
-//     });
-//   }
-// };
 
 exports.upload = async (req, res) => {
   if (!req.body) {
@@ -159,8 +139,9 @@ exports.upload = async (req, res) => {
   }
   try {
     const id = req.params.id;
+    console.log(req.files);
     // Upload image to cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    const result = await cloudinary.uploader.upload(req.files[0].path, {
       folder: "user",
     });
     // Create new img
@@ -185,9 +166,9 @@ exports.upload = async (req, res) => {
         result.save();
       }
     });
-    res.status(200).json({ status: "200", result: { ...image._doc } });
+    return res.status(200).json({ status: "200", result: { ...image._doc } });
   } catch (err) {
-    return res.status(400).json({ status: "400", message: error.message });
+    return res.status(400).json({ status: "400", message: err.message });
   }
 };
 exports.deleteImage = async (req, res) => {

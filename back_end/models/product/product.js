@@ -4,43 +4,28 @@ const productSchema = new mongoose.Schema({
   product_code: {
     type: String,
     required: true,
-    min: 6,
-    max: 255,
-    unique: true,
   },
   name: {
     type: String,
     required: true,
-    max: 255,
-    min: 6,
   },
-
-  price: {
-    type: Number,
-    required: true,
-  },
-  image: [{ type: mongoose.Schema.Types.ObjectId, ref: "productImage" }],
-  details: [
-    {
-      type: Object,
-    },
-  ],
-  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
-  category: {
+  image: [{ type: mongoose.Schema.Types.ObjectId, ref: "ImageProduct" }],
+  details: { type: Array },
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comments" }],
+  desc: {
     type: String,
-    required: true,
   },
-  role: {
+  views: {
     type: Number,
-    required: true,
   },
-  comments: {
-    type: Array,
+  sales: {
+    type: Number,
   },
-  orders: {
-    type: Array,
+  discount: {
+    type: Number,
   },
+  supplier: [{ type: mongoose.Schema.Types.ObjectId, ref: "supplier" }],
 });
-const usersDB = mongoose.model("users", userSchema);
+const productsDB = mongoose.model("products", productSchema);
 
-module.exports = usersDB;
+module.exports = productsDB;

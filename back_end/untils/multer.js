@@ -8,4 +8,6 @@ const storage = multer.diskStorage({
     cb(null, new Date().getTime() + path.extname(file.originalname));
   },
 });
-module.exports = upload = multer({ storage }).single("image");
+const upload = multer({ storage }).single("image");
+const uploads = multer({ storage }).array("image", 5);
+module.exports = { upload, uploads };
