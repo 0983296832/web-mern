@@ -1,8 +1,8 @@
-const usersDB = require("../../models/userModel");
+const usersDB = require("../../models/user/userModel");
 const bcrypt = require("bcryptjs");
 const { passwordValidation } = require("../../validate/validate");
 const cloudinary = require("../../helper/cloudinaryConfig");
-const ImageModel = require("../../models/imageModel");
+const ImageModel = require("../../models/user/imageModel");
 
 exports.findAll = async (req, res) => {
   try {

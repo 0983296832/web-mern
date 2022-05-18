@@ -1,6 +1,7 @@
-const usersDB = require("../../models/userModel");
+const usersDB = require("../../models/user/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const _ = require("lodash");
 const {
   registerValidation,
   loginValidation,
@@ -15,7 +16,7 @@ setInterval(() => {
 }, 1000000);
 
 exports.register = async (req, res) => {
-  if (!req.body) {
+  if (_.isEmpty(req.body)) {
     return res.status(400).json({
       status: "400",
       message: "Content can not be empty",
@@ -60,7 +61,7 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  if (!req.body) {
+  if (_.isEmpty(req.body)) {
     return res.status(400).json({
       status: "400",
       message: "Content can not be empty",
@@ -208,7 +209,6 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 exports.resetPassword = async (req, res) => {
-  console.log(req.body.code);
   try {
     if (req.body.code != code) {
       return res
