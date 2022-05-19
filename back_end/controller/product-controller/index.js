@@ -112,18 +112,17 @@ exports.comment = async (req, res) => {
     }
     const comment = new commentDB({
       name: req.body.name,
-      author_id: req.params.id,
       content: req.body.content,
+      vote: req.body.vote,
     });
     const commentSaved = await comment.save();
-    productsDB.findById(req.params.id, (err, result) => {
+    await productsDB.findById(req.params.id, (err, result) => {
       if (err) {
         return res.status(500).json({
           success: "false",
           message: "can not find product",
         });
       } else {
-        console.log(result.comments);
         result.comments.push(commentSaved);
         result.save();
       }
@@ -163,18 +162,16 @@ exports.importProduct = async (req, res) => {
       });
       const savedProductImport = await newProductImport.save();
       const { price, color, category, quantity, size } = savedProductImport;
-      console.log(existProduct.details);
       const existColor = existProduct.details.find(
-        (item) => item.color === color
+        (item) => item.color === color && item.size === size
       );
       let newDetails;
       if (existColor) {
         newDetails = existProduct.details.map((item) => {
-          if (item.color === color) {
+          if (item.color === color && item.size === size) {
             return {
               ...item,
               quantity: item.quantity + quantity,
-              size: [item.size, size],
             };
           } else {
             return item;

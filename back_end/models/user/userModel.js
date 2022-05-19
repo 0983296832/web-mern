@@ -36,12 +36,8 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  orders: {
-    type: Array,
-  },
+  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "orders" }],
 });
 const usersDB = mongoose.model("users", userSchema);
 
 module.exports = usersDB;
-// mutiple export
-// module.exports ={Productdb, post} ;
