@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 
 const suppliersSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  supplier_name: { type: String, required: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
   product_code: { type: String, required: true },
-  price: { type: String, required: true },
+  price: { type: Number, required: true },
   color: { type: String, required: true },
   category: { type: String, required: true },
   size: { type: String, required: true },

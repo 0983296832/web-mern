@@ -8,6 +8,7 @@ const {
 
 route.get("/get-all", checkAuth, checkRole, controller.getAll);
 route.get("/create", checkAuth, checkRole, controller.create);
+route.get("/supplier", checkAuth, checkRole, controller.getSupplier);
 route.put(
   "/upload-image/:id",
   checkAuth,

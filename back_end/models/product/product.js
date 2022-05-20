@@ -9,6 +9,8 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  category: { type: String, required: true },
+  price: { type: Number, required: true },
   image: [{ type: mongoose.Schema.Types.ObjectId, ref: "ImageProduct" }],
   details: { type: Array },
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comments" }],
@@ -25,7 +27,11 @@ const productSchema = new mongoose.Schema({
     type: Number,
   },
   supplier: [{ type: mongoose.Schema.Types.ObjectId, ref: "supplier" }],
+  createdAt: { type: Date },
 });
+
+productSchema.index({ product_code: "text" });
 const productsDB = mongoose.model("products", productSchema);
+productsDB.createIndexes({ product_code: "text" });
 
 module.exports = productsDB;

@@ -4,14 +4,33 @@ const cloudinary = require("../../helper/cloudinaryConfig");
 const productImage = require("../../models/product/productImage");
 const commentDB = require("../../models/product/commentModel");
 const suppliersDB = require("../../models/product/supplierModel");
+const Features = require("../../lib/feature");
 
 exports.getAll = async (req, res) => {
-  const products = await productsDB.find();
-  return res.status(200).json({
-    status: "200",
-    message: "get all product successfully!",
-    products: products,
-  });
+  try {
+    const features = new Features(productsDB.find(), req.query)
+      .sorting()
+      .paginating()
+      .searching()
+      .filtering();
+
+    const result = await Promise.allSettled([
+      features.query,
+      productsDB.countDocuments(), //count number of products.
+    ]);
+
+    const product = result[0].status === "fulfilled" ? result[0].value : [];
+    const count = result[1].status === "fulfilled" ? result[1].value : 0;
+
+    return res.status(200).json({
+      status: "200",
+      message: "get all product successfully",
+      data: product,
+      count: count,
+    });
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
 };
 
 exports.create = async (req, res) => {
@@ -103,7 +122,6 @@ exports.uploadProductImage = async (req, res) => {
 };
 
 exports.comment = async (req, res) => {
-  console.log(productsDB);
   try {
     if (_.isEmpty(req.body)) {
       res
@@ -150,6 +168,7 @@ exports.importProduct = async (req, res) => {
     if (existProduct) {
       const newProductImport = new suppliersDB({
         name: req.body.name,
+        supplier_name: req.body.supplier_name,
         address: req.body.address,
         phone: req.body.phone,
         email: req.body.email,
@@ -161,12 +180,13 @@ exports.importProduct = async (req, res) => {
         size: req.body.size,
       });
       const savedProductImport = await newProductImport.save();
-      const { price, color, category, quantity, size } = savedProductImport;
-      const existColor = existProduct.details.find(
+      const { color, quantity, size } = savedProductImport;
+      const existColorAndSize = existProduct.details.find(
         (item) => item.color === color && item.size === size
       );
+
       let newDetails;
-      if (existColor) {
+      if (existColorAndSize) {
         newDetails = existProduct.details.map((item) => {
           if (item.color === color && item.size === size) {
             return {
@@ -178,10 +198,7 @@ exports.importProduct = async (req, res) => {
           }
         });
       } else {
-        newDetails = [
-          ...existProduct.details,
-          { price, color, category, quantity, size },
-        ];
+        newDetails = [...existProduct.details, { color, quantity, size }];
       }
 
       productsDB
@@ -196,17 +213,20 @@ exports.importProduct = async (req, res) => {
               .json({ status: "400", message: err.message });
           }
         });
-      const product = await productsDB.updateOne(
+
+      const result = await productsDB.updateOne(
         {
           product_code: req.body.product_code,
         },
-        { details: newDetails },
+        {
+          details: newDetails,
+        },
         { new: true }
       );
       return res.status(200).json({
         status: "200",
-        message: "Product import successfully",
-        data: product,
+        message: "import successfully",
+        data: result,
       });
     }
     const newProductImport = new suppliersDB({
@@ -220,27 +240,62 @@ exports.importProduct = async (req, res) => {
       category: req.body.category,
       quantity: req.body.quantity,
       size: req.body.size,
+      supplier_name: req.body.supplier_name,
     });
     const newProduct = new productsDB({
       product_code: req.body.product_code,
       name: req.body.name,
+      price: req.body.price,
+      category: req.body.category,
+      createdAt: Date.now(),
     });
     await newProduct.save();
     const savedProductImport = await newProductImport.save();
-    const { price, color, category, quantity, size } = savedProductImport;
+    const { color, quantity, size } = savedProductImport;
     productsDB
       .findOne({ product_code: req.body.product_code })
       .then((result, err) => {
         if (result) {
-          result.details.push({ price, color, category, quantity, size });
+          result.details.push({ color, quantity, size });
           result.supplier.push(savedProductImport);
           result.save();
-          res.status(200).json({ status: "200", message: result });
+          return res.status(200).json({
+            status: "200",
+            message: "import successfully",
+            data: result,
+          });
         } else {
-          res.status(400).json({ status: "400", message: err.message });
+          return res.status(400).json({ status: "400", message: err.message });
         }
       });
   } catch (error) {
-    res.status(400).json({ status: "400", message: error.message });
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+
+exports.getSupplier = async (req, res) => {
+  try {
+    const features = new Features(suppliersDB.find(), req.query)
+      .sorting()
+      .paginating()
+      .searching()
+      .filtering();
+
+    const result = await Promise.allSettled([
+      features.query,
+      suppliersDB.countDocuments(), //count number of products.
+    ]);
+
+    const supplier = result[0].status === "fulfilled" ? result[0].value : [];
+    const count = result[1].status === "fulfilled" ? result[1].value : 0;
+
+    return res.status(200).json({
+      status: "200",
+      message: "get all supplier successfully",
+      data: supplier,
+      count: count,
+    });
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
   }
 };
