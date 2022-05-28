@@ -4,7 +4,7 @@ const express = require("express");
 const app = express();
 const { upload, uploads } = require("./untils/multer");
 
-// const cors = require("cors");
+const cors = require("cors");
 const connectDB = require("./database/connect");
 
 //PORT
@@ -15,8 +15,7 @@ connectDB();
 
 //midleware
 app.use(uploads);
-app.use(upload);
-// app.use(cors);
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());

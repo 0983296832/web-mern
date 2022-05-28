@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema({
     min: 6,
     max: 255,
   },
+  name_surname: {
+    type: String,
+    min: 6,
+    max: 255,
+  },
   email: {
     type: String,
     required: true,
@@ -27,6 +32,9 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   address: {
+    type: String,
+  },
+  status: {
     type: String,
   },
   birth: {

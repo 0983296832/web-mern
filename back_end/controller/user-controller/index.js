@@ -3,14 +3,54 @@ const bcrypt = require("bcryptjs");
 const { passwordValidation } = require("../../validate/validate");
 const cloudinary = require("../../helper/cloudinaryConfig");
 const ImageModel = require("../../models/user/imageModel");
+const Features = require("../../lib/feature");
 
 exports.findAll = async (req, res) => {
   try {
-    const data = await usersDB.find();
+    const features = new Features(
+      usersDB.find().populate({ path: "images" }),
+      req.query
+    )
+      .sorting()
+      .paginating()
+      .searching()
+      .filtering();
+
+    const result = await Promise.allSettled([
+      features.query,
+      usersDB.countDocuments(), //count number of user.
+    ]);
+
+    const users = result[0].status === "fulfilled" ? result[0].value : [];
+    const count = result[1].status === "fulfilled" ? result[1].value : 0;
     return res.status(200).json({
       status: "200",
       message: "get all user successfully!",
-      result: data,
+      result: users.map((i) => {
+        const {
+          _id: id,
+          name,
+          name_surname,
+          email,
+          role,
+          comments,
+          orders,
+          status,
+          image,
+        } = i;
+        return {
+          id,
+          name,
+          name_surname,
+          email,
+          role,
+          comments,
+          orders,
+          status,
+          image,
+        };
+      }),
+      count,
     });
   } catch (error) {
     return res.status(400).json({

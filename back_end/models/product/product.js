@@ -11,11 +11,15 @@ const productSchema = new mongoose.Schema({
   },
   category: { type: String, required: true },
   price: { type: Number, required: true },
-  image: [{ type: mongoose.Schema.Types.ObjectId, ref: "ImageProduct" }],
+  image: [{ type: mongoose.Schema.Types.ObjectId, ref: "imageproducts" }],
   details: { type: Array },
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comments" }],
   desc: {
     type: String,
+  },
+  gender: {
+    type: String,
+    required: true,
   },
   views: {
     type: Number,

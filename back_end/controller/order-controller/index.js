@@ -1,6 +1,7 @@
 const ordersDB = require("../../models/order/orderModels");
 const productsDB = require("../../models/product/product");
 const usersDB = require("../../models/user/userModel");
+const Features = require("../../lib/feature");
 
 const _ = require("lodash");
 
@@ -24,7 +25,10 @@ exports.order = async (req, res) => {
           );
           await productsDB.updateOne(
             { product_code: item.product_code },
-            { $push: { details: newItem } }
+            {
+              $push: { details: newItem },
+              $inc: { sales: 1 },
+            }
           );
         }
       });
@@ -39,6 +43,7 @@ exports.order = async (req, res) => {
       details: req.body.details,
       user_name: req.body.user_name,
       state: req.body.state,
+      image: req.body.image,
       address: req.body.address,
       phone: req.body.phone,
       payment_type: req.body.payment_type,
@@ -47,7 +52,6 @@ exports.order = async (req, res) => {
     });
     const savedOrder = await order.save();
     if (req.body.user_id) {
-      console.log(req.body.user_id);
       usersDB.findById(req.body.user_id).then((result, err) => {
         if (err) {
           return res.status(500).json({
@@ -71,6 +75,29 @@ exports.order = async (req, res) => {
         data: savedOrder,
       });
     }
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+
+exports.getAll = async (req, res) => {
+  try {
+    const features = new Features(ordersDB.find(), req.query)
+      .sorting()
+      .paginating()
+      .searching()
+      .filtering();
+
+    const result = await Promise.allSettled([
+      features.query,
+      ordersDB.countDocuments(), //count number of products.
+    ]);
+
+    const orders = result[0].status === "fulfilled" ? result[0].value : [];
+    const count = result[1].status === "fulfilled" ? result[1].value : 0;
+    return res
+      .status(200)
+      .json({ status: "200", message: "success", data: orders, count });
   } catch (error) {
     return res.status(400).json({ status: "400", message: error.message });
   }

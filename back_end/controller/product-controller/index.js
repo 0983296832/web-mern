@@ -80,7 +80,9 @@ exports.uploadProductImage = async (req, res) => {
 
     const uploads = async (path) => {
       if (!path) return;
-      const newPath = await cloudinary.uploader.upload(path);
+      const newPath = await cloudinary.uploader.upload(path, {
+        folder: productExists.name,
+      });
       let newImage = new productImage({
         product_id: req.params.id,
         imageUrl: newPath.url,
@@ -106,13 +108,11 @@ exports.uploadProductImage = async (req, res) => {
               message: "can not find product",
             });
           } else {
-            urls.map((url) => {
-              result.image.push(url);
-            });
+            result.image = urls;
             result.save();
             return res
               .status(200)
-              .json({ status: "200", message: "images saved" });
+              .json({ status: "200", message: "images saved", data: result });
           }
         })
       );
@@ -171,6 +171,7 @@ exports.importProduct = async (req, res) => {
         supplier_name: req.body.supplier_name,
         address: req.body.address,
         phone: req.body.phone,
+        gender: req.body.gender,
         email: req.body.email,
         product_code: req.body.product_code,
         price: req.body.price,

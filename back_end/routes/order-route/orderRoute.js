@@ -7,5 +7,6 @@ const {
 } = require("../../controller/auth-controller/verify");
 
 route.post("/create/:id", controller.order);
+route.get("/get-all", controller.getAll);
 
 module.exports = route;
