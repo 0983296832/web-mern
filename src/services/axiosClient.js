@@ -1,5 +1,8 @@
 import axios from "axios";
 import queryString from "query-string";
+import jwt_decode from "jwt-decode";
+import dayjs from "dayjs";
+import { LOCAL_STORAGE_USER_KEY } from "../constant/constant";
 
 const axiosClient = axios.create({
   baseURL: process.env.REACT_APP_BASE_URL,
@@ -10,8 +13,16 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(async (config) => {
-  config.headers["auth-token"] =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MjgwZDQ5YmIxMWY3ZTE2MjQyNTNiYzQiLCJuYW1lIjoibGUgdmFuIGJpbmgiLCJlbWFpbCI6InRoYW5oYmluaDE5MTA5OUBnbWFpbC5jb20iLCJyb2xlIjoyLCJpYXQiOjE2NTMwMzU4MDQsImV4cCI6MTY2MTY3NTgwNH0.KPxp4pDxLd9NjAWbGSFtPWrAGicJlGnnvCY9B5wyo2A";
+  let authToken = localStorage.getItem(LOCAL_STORAGE_USER_KEY)
+    ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_USER_KEY))
+    : null;
+  config.headers["auth-token"] = authToken?.token;
+  const user = jwt_decode(authToken?.token);
+  const isExpired = dayjs.unix(user?.exp).diff(dayjs()) < 1;
+  console.log(isExpired);
+  if (!isExpired) {
+    return config;
+  }
   return config;
 });
 
