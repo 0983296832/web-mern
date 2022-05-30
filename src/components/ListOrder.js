@@ -4,11 +4,18 @@ import {
   Typography,
   Input,
   Form,
-  InputNumber,
   Tooltip,
+  Tag,
+  Select,
 } from "antd";
 import { useState } from "react";
 import "../assets/css/list.css";
+import Orders from "../services/orderServices";
+import Toast from "./Toast";
+import moment from "moment";
+import { useLocation } from "react-router-dom";
+import Suppliers from "../services/supplierServices";
+
 const ListTable = ({
   data,
   noName,
@@ -19,9 +26,11 @@ const ListTable = ({
   XAxis,
   noImg,
   noOrder,
+  setData,
 }) => {
   const [editingKey, setEditingKey] = useState("");
   const [form] = Form.useForm();
+  let location = useLocation();
   const EditableCell = ({
     editing,
     dataIndex,
@@ -32,7 +41,22 @@ const ListTable = ({
     children,
     ...restProps
   }) => {
-    const inputNode = inputType === "number" ? <InputNumber /> : <Input />;
+    const inputNode =
+      inputType === "select" ? (
+        <Select>
+          <Select.Option value="đang đợi gói hàng">
+            đang đợi gói hàng
+          </Select.Option>
+          <Select.Option value="đang giao hàng">đang giao hàng</Select.Option>
+          <Select.Option value="đã xác nhận">đã xác nhận</Select.Option>
+          <Select.Option value="giao hàng thành công">
+            giao hàng thành công
+          </Select.Option>
+          <Select.Option value="đã hủy">đã hủy</Select.Option>
+        </Select>
+      ) : (
+        <Input />
+      );
     return (
       <td {...restProps}>
         {editing ? (
@@ -64,11 +88,100 @@ const ListTable = ({
 
   const edit = (record) => {
     form.setFieldsValue(record);
-
     setEditingKey(record.key);
   };
-  const save = () => {
-    console.log(form.getFieldValue());
+  const save = async () => {
+    try {
+      if (location.pathname === "/order") {
+        const { id, user_name, address, phone, state, receive_date } =
+          form.getFieldValue();
+        if (state === "giao hàng thành công") {
+          await Orders.updateOrder(id, {
+            user_name,
+            address,
+            phone,
+            state,
+            receive_date: new Date(),
+          });
+          setData(
+            data.map((item) => {
+              if (item.id === id) {
+                return {
+                  ...item,
+                  user_name,
+                  address,
+                  phone,
+                  state,
+                  receive_date: new Date(),
+                };
+              } else return item;
+            })
+          );
+        } else if (state === "giao hàng thành công" && receive_date) {
+          await Orders.updateOrder(id, {
+            user_name,
+            address,
+            phone,
+          });
+          setData(
+            data.map((item) => {
+              if (item.id === id) {
+                return {
+                  ...item,
+                  user_name,
+                  address,
+                  phone,
+                };
+              } else return item;
+            })
+          );
+        } else {
+          await Orders.updateOrder(id, {
+            user_name,
+            address,
+            phone,
+            state,
+          });
+          setData(
+            data.map((item) => {
+              if (item.id === id) {
+                return {
+                  ...item,
+                  user_name,
+                  address,
+                  phone,
+                  state,
+                };
+              } else return item;
+            })
+          );
+        }
+      } else {
+        const { id, user_name, address, phone } = form.getFieldValue();
+        await Suppliers.updateSupplier(id, {
+          user_name,
+          address,
+          phone,
+        });
+        setData(
+          data.map((item) => {
+            if (item.id === id) {
+              return {
+                ...item,
+                user_name,
+                address,
+                phone,
+              };
+            } else return item;
+          })
+        );
+      }
+
+      Toast("success", "update success");
+    } catch (error) {
+      Toast("error", error.message);
+    }
+
     setEditingKey("");
   };
 
@@ -111,7 +224,12 @@ const ListTable = ({
       dataIndex: "created",
       key: "created",
       width: 150,
-      editable: true,
+      editable: false,
+      render: (_, record) => {
+        return (
+          <div>{moment(record.receive_date).utc().format("DD/MM/YYYY")}</div>
+        );
+      },
     },
     {
       title: "Address",
@@ -121,6 +239,7 @@ const ListTable = ({
       ellipsis: {
         showTitle: false,
       },
+      width: 250,
       render: (address) => (
         <Tooltip placement="topLeft" title={address}>
           {address}
@@ -135,18 +254,34 @@ const ListTable = ({
       editable: true,
     },
     {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      width: 150,
+      editable: false,
+    },
+    {
       title: "Payment Type",
       dataIndex: "payment_type",
       key: "payment_type",
-      editable: true,
+      editable: false,
       hidden: noPay,
     },
     {
       title: "Recive Date",
       dataIndex: "receive_date",
       key: "receive_date",
-      editable: true,
+      editable: false,
       hidden: noRec,
+      render: (_, record) => {
+        if (record.receive_date) {
+          return (
+            <div>{moment(record.receive_date).utc().format("DD/MM/YYYY")}</div>
+          );
+        } else {
+          return <div></div>;
+        }
+      },
     },
     {
       title: "Status",
@@ -155,6 +290,27 @@ const ListTable = ({
       fixed: "right",
       editable: true,
       hidden: noStatus,
+      render: (_, record) => {
+        let colorTag;
+        switch (record.state) {
+          case "đang đợi gói hàng":
+            colorTag = "yellow";
+            break;
+          case "đã xác nhận":
+            colorTag = "blue";
+            break;
+          case "đang giao hàng":
+            colorTag = "gray";
+            break;
+          case "giao hàng thành công":
+            colorTag = "green";
+            break;
+          case "đã hủy":
+            colorTag = "red";
+            break;
+        }
+        return <Tag color={colorTag}>{record.state}</Tag>;
+      },
     },
     {
       title: "Action",
@@ -258,7 +414,7 @@ const ListTable = ({
       ...col,
       onCell: (record) => ({
         record,
-        inputType: "text",
+        inputType: col.dataIndex === "state" ? "select" : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),

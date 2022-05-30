@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import "../assets/css/wrapper.css";
 import SearchInput from "./SearchInput";
 import {
@@ -13,8 +13,16 @@ import { MdDashboard, MdLocalShipping } from "react-icons/md";
 import { FaRegUser } from "react-icons/fa";
 import { ImStatsDots, ImProfile } from "react-icons/im";
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import AuthContext from "../context/AuthContext";
+import { LOCAL_STORAGE_USER_KEY } from "../constant/constant";
 
+const logout = () => {
+  localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+};
 const Wrapper = ({ children }) => {
+  const { auth } = useContext(AuthContext);
+  let location = useLocation();
   const data = [
     {
       title: "Main",
@@ -44,67 +52,71 @@ const Wrapper = ({ children }) => {
       title: "User",
       children: [
         { icon: <ImProfile />, link: "Profile", path: "/" },
-        { icon: <BiLogOut />, link: "Logout", path: "/" },
+        { icon: <BiLogOut />, link: "Logout", path: "/login" },
       ],
     },
   ];
 
-  return (
-    <div>
-      <div className="wrapper__layout">
-        <div className="menu">
-          <div className="logo">logo</div>
-          <div className="side__bar">
-            {data.map((item, index) => {
-              return (
-                <div key={index}>
-                  <Sidebar data={item} />
+  if (location.pathname === "/login") {
+    return <div>{children}</div>;
+  } else
+    return (
+      <div>
+        <div className="wrapper__layout">
+          <div className="menu">
+            <div className="logo">logo</div>
+            <div className="side__bar">
+              {data.map((item, index) => {
+                return (
+                  <div key={index}>
+                    <Sidebar data={item} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="main">
+            <div className="header">
+              <div>
+                <SearchInput />
+              </div>
+              <div className="header__option">
+                <div className="option__icon language__icon">
+                  <AiOutlineGlobal />
+                  <span style={{ fontSize: ".9rem" }}>English</span>
                 </div>
-              );
-            })}
+                <div className="option__icon">
+                  <BiMoon />
+                </div>
+
+                <div className="option__icon">
+                  <AiOutlineBell />
+                </div>
+                <div className="option__icon">
+                  <BiMessageDots />
+                </div>
+                <div className="avatar__icon">
+                  <Avatar
+                    shape="circle"
+                    src={
+                      auth?.data?.image || "https://joeschmoe.io/api/v1/random"
+                    }
+                  />
+                </div>
+                <div className="option__icon">
+                  <strong>{auth?.data?.name || "No Name"}</strong>
+                </div>
+              </div>
+            </div>
+            <div className="container">{children}</div>
           </div>
         </div>
-        <div className="main">
-          <div className="header">
-            <div>
-              <SearchInput />
-            </div>
-            <div className="header__option">
-              <div className="option__icon language__icon">
-                <AiOutlineGlobal />
-                <span style={{ fontSize: ".9rem" }}>English</span>
-              </div>
-              <div className="option__icon">
-                <BiMoon />
-              </div>
-
-              <div className="option__icon">
-                <AiOutlineBell />
-              </div>
-              <div className="option__icon">
-                <BiMessageDots />
-              </div>
-              <div className="avatar__icon">
-                <Avatar
-                  shape="circle"
-                  src="https://joeschmoe.io/api/v1/random"
-                />
-              </div>
-              <div className="option__icon">
-                <strong>Doe</strong>
-              </div>
-            </div>
-          </div>
-          <div className="container">{children}</div>
+        <div className="footer">
+          © 2021 Copyright:{" "}
+          <strong style={{ paddingLeft: 5 }}> Lê Văn Bình</strong>
         </div>
       </div>
-      <div>ándjnasdlansduasnfkjn</div>
-      <div>ándjnasdlansduasnfkjn</div>
-      <div>ándjnasdlansduasnfkjn</div>
-      <div>ándjnasdlansduasnfkjn</div>
-      <div>ándjnasdlansduasnfkjn</div>
-    </div>
-  );
+    );
 };
 
 export default Wrapper;
@@ -113,13 +125,26 @@ const Sidebar = ({ data }) => {
   return (
     <div className="menu__part">
       <h2 className="title__nav">{data.title}</h2>
-      {data.children.map((item, index) => {
-        return (
-          <Link to={item.path} className="part__nav" key={index}>
-            {item.icon}
-            <span>{item.link}</span>
-          </Link>
-        );
+      {data.children.map((item, index, arr) => {
+        if (index === arr.length - 1) {
+          return (
+            <Link
+              to={item.path}
+              className="part__nav"
+              key={index}
+              onClick={logout}
+            >
+              {item.icon}
+              <span>{item.link}</span>
+            </Link>
+          );
+        } else
+          return (
+            <Link to={item.path} className="part__nav" key={index}>
+              {item.icon}
+              <span>{item.link}</span>
+            </Link>
+          );
       })}
     </div>
   );

@@ -1,4 +1,6 @@
 import { Button, Form, Input, InputNumber, Select } from "antd";
+import Toast from "../../../components/Toast";
+
 import Products from "../../../services/productServices";
 const layout = {
   labelCol: {
@@ -18,11 +20,15 @@ const validateMessages = {
 const AddProduct = () => {
   const onFinish = async (values) => {
     try {
-      const data = await Products.addProduct(values);
+      const data = await Products.addProduct(values.product);
+      if (data) {
+        Toast("success", " Add new product success");
+      } else {
+        Toast("error", " Failed to add new product");
+      }
     } catch (error) {
-      
+      Toast("error", error.message);
     }
-    console.log(values);
   };
 
   return (
@@ -100,7 +106,7 @@ const AddProduct = () => {
             },
           ]}
         >
-          <InputNumber />
+          <InputNumber min={0} />
         </Form.Item>
         <Form.Item
           name={["product", "color"]}
@@ -123,10 +129,10 @@ const AddProduct = () => {
           ]}
         >
           <Select
-            defaultValue="male"
             style={{
               width: 120,
             }}
+            allowClear
           >
             <Select.Option value="male">Male</Select.Option>
             <Select.Option value="female">Female</Select.Option>
@@ -152,7 +158,7 @@ const AddProduct = () => {
             },
           ]}
         >
-          <InputNumber />
+          <InputNumber min={0}/>
         </Form.Item>
         <Form.Item
           name={["product", "quantity"]}
@@ -163,7 +169,7 @@ const AddProduct = () => {
             },
           ]}
         >
-          <InputNumber />
+          <InputNumber min={0}/>
         </Form.Item>
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <Button type="primary" htmlType="submit">

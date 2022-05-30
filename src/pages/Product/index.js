@@ -3,15 +3,28 @@ import "../../assets/css/datatable.css";
 import { DataGrid } from "@mui/x-data-grid";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Input } from "antd";
+import { Input, Tooltip, Rate } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { Select } from "antd";
 import { Button } from "antd";
+import Products from "../../services/productServices";
+import Toast from "../../components/Toast";
 
 const { Option } = Select;
 
 const productColumns = [
-  { field: "id", headerName: "ID", width: 150 },
+  {
+    field: "id",
+    headerName: "ID",
+    width: 150,
+    renderCell: (params) => {
+      return (
+        <Tooltip placement="topLeft" title={params.row.id}>
+          {params.row.id.slice(0, 10) + "..."}
+        </Tooltip>
+      );
+    },
+  },
   {
     field: "product_code",
     headerName: "Product Code",
@@ -59,162 +72,61 @@ const productColumns = [
     headerName: "Views",
     width: 100,
   },
+  {
+    field: "votes",
+    headerName: "Votes",
+    width: 150,
+    renderCell: (params) => {
+      const desc = ["terrible", "bad", "normal", "good", "wonderful"];
+      return (
+        <Rate
+          allowHalf
+          defaultValue={params.row.votes}
+          disabled
+          tooltips={desc}
+          className="rate"
+        />
+      );
+    },
+  },
 ];
 
-//temporary data
-const productRows = [
-  {
-    id: "3424a777-458b-4a61-90b0-2d3f974ba88b",
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 2,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 3,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 4,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 5,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 6,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 7,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 8,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 9,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-  {
-    id: 10,
-    product_code: "handjasiajs",
-    name: "nike authentic",
-    category: "nike",
-    price: 2000,
-    image: [
-      "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    ],
-    gender: "men",
-    sales: 100,
-    views: 100,
-  },
-];
 const ProductManagement = () => {
-  const [data, setData] = useState(productRows);
-  const [data2, setData2] = useState([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // const fetchData = async () => {
-    //   const params = {
-    //     page: 1,
-    //     limit: 5,
-    //   };
-    //   const result = await UserService.getUsers(params);
-    //   console.log(result);
-    //   setData2(
-    //     result.data.map((item) => {
-    //       return {
-    //         ...item,
-    //       };
-    //     })
-    //   );
-    // };
-    // fetchData();
+    setLoading(true);
+    const fetchData = async () => {
+      try {
+        const params = {
+          page: 1,
+          limit: 10,
+        };
+        const result = await Products.getProducts(params);
+
+        setData(
+          result.data.map((item) => {
+            return {
+              id: item._id,
+              product_code: item.product_code,
+              name: item.name,
+              category: item.category,
+              price: item.price,
+              image: item.image[0]?.imageUrl || "",
+              gender: item.gender,
+              sales: item.sales,
+              views: item.views,
+              votes: item.votes,
+            };
+          })
+        );
+      } catch (error) {
+        Toast("error", error.message);
+      }
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   const handleDelete = (id) => {
@@ -229,7 +141,10 @@ const ProductManagement = () => {
       renderCell: (params) => {
         return (
           <div className="cellAction">
-            <Link to="/product-detail" style={{ textDecoration: "none" }}>
+            <Link
+              to={`/product-detail/${params.row.id}`}
+              style={{ textDecoration: "none" }}
+            >
               <div className="viewButton">View Detail</div>
             </Link>
             <div

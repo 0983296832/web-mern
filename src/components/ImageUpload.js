@@ -1,26 +1,10 @@
 import { Upload } from "antd";
 import ImgCrop from "antd-img-crop";
-import { useState } from "react";
 import _ from "lodash";
-import Products from "../services/productServices";
 
-const ImgUpload = ({ disable }) => {
-  const [fileList, setFileList] = useState([]);
-
+const ImgUpload = ({ disable, fileList, setFileList }) => {
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
-  };
-  const upload = async () => {
-    const formData = new FormData();
-    _.forEach(fileList, (file) => {
-      formData.append("image", file.originFileObj);
-    });
-
-    const data = await Products.uploadImages(
-      "6287a69d7ff2ad32976c9f41",
-      formData
-    );
-    console.log(data);
   };
 
   const onPreview = async (file) => {

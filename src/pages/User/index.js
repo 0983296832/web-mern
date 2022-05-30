@@ -7,6 +7,7 @@ import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { Select } from "antd";
 import { Button } from "antd";
+import Toast from "../../components/Toast";
 
 const { Option } = Select;
 
@@ -15,12 +16,12 @@ const userColumns = [
   {
     field: "user",
     headerName: "User",
-    width: 230,
+    width: 200,
     renderCell: (params) => {
       return (
         <div className="cellWithImg">
           <img className="cellImg" src={params.row.img} alt="avatar" />
-          {params.row.username}
+          {params.row.user}
         </div>
       );
     },
@@ -34,7 +35,7 @@ const userColumns = [
   {
     field: "phone",
     headerName: "Phone",
-    width: 100,
+    width: 150,
   },
   {
     field: "status",
@@ -50,110 +51,35 @@ const userColumns = [
   },
 ];
 
-//temporary data
-const userRows = [
-  {
-    id: 1,
-    username: "Snow",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    status: "active",
-    email: "1snow@gmail.com",
-    age: 35,
-  },
-  {
-    id: 2,
-    username: "Jamie Lannister",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "2snow@gmail.com",
-    status: "passive",
-    age: 42,
-  },
-  {
-    id: 3,
-    username: "Lannister",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "3snow@gmail.com",
-    status: "pending",
-    age: 45,
-  },
-  {
-    id: 4,
-    username: "Stark",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "4snow@gmail.com",
-    status: "active",
-    age: 16,
-  },
-  {
-    id: 5,
-    username: "Targaryen",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "5snow@gmail.com",
-    status: "passive",
-    age: 22,
-  },
-  {
-    id: 6,
-    username: "Melisandre",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "6snow@gmail.com",
-    status: "active",
-    age: 15,
-  },
-  {
-    id: 7,
-    username: "Clifford",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "7snow@gmail.com",
-    status: "passive",
-    age: 44,
-  },
-  {
-    id: 8,
-    username: "Frances",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "8snow@gmail.com",
-    status: "active",
-    age: 36,
-  },
-  {
-    id: 9,
-    username: "Roxie",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "snow@gmail.com",
-    status: "pending",
-    age: 65,
-  },
-  {
-    id: 10,
-    username: "Roxie",
-    img: "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=500",
-    email: "snow@gmail.com",
-    status: "active",
-    age: 65,
-  },
-];
-
 const Datatable = () => {
-  const [data, setData] = useState(userRows);
-  const [data2, setData2] = useState([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const params = {
-        page: 1,
-        limit: 5,
-      };
-      const result = await UserService.getUsers(params);
-      console.log(result);
-
-      setData2(
-        result.data.map((item) => {
-          return {
-            ...item,
-          };
-        })
-      );
+      setLoading(true);
+      try {
+        const params = {
+          page: 1,
+          limit: 10,
+        };
+        const result = await UserService.getUsers(params);
+        setData(
+          result.result.map(({ id, email, name, image, status, phone }) => {
+            return {
+              id: id,
+              email: email,
+              user: name,
+              img: image?.imageUrl || "https://joeschmoe.io/api/v1/random",
+              status: status,
+              phone: phone || "dont have yet",
+            };
+          })
+        );
+      } catch (error) {
+        Toast("error", error.message);
+      }
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -170,8 +96,11 @@ const Datatable = () => {
       renderCell: (params) => {
         return (
           <div className="cellAction">
-            <Link to="/user-detail" style={{ textDecoration: "none" }}>
-              <div className="viewButton">View</div>
+            <Link
+              to={`/user-detail/${params.row.id}`}
+              style={{ textDecoration: "none" }}
+            >
+              <div className="viewButton">View Detail</div>
             </Link>
             <div
               className="deleteButton"
@@ -188,7 +117,7 @@ const Datatable = () => {
     <div className="main-wrapper">
       <div className="datatable">
         <div className="datatableTitle">
-          Add New User
+          User Management
           <Link to="/add-user" className="_link">
             Add New
           </Link>

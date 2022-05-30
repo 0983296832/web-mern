@@ -2,6 +2,7 @@ import React from "react";
 import "../assets/css/wigget.css";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import { Link } from "react-router-dom";
+import CountUp from "react-countup";
 
 const Wigget = ({ data }) => {
   return (
@@ -20,11 +21,11 @@ const Wigget = ({ data }) => {
       <div className="wigget__main">
         <h2 className="wigget__money">
           {data.isMoney && "$"}
-          {data.number}
+          <CountUp end={data.number} />
         </h2>
       </div>
       <div className="wigget__bottom">
-        <Link to="/" className="wigget__link">
+        <Link to={`${data.path}`} className="wigget__link">
           {data.link}
         </Link>
         {data.icon}

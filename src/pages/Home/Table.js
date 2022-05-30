@@ -8,18 +8,35 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import OrderServices from "../../services/orderServices";
+import moment from "moment";
+import { Tag } from "antd";
 
 const TableList = () => {
   const [rows, setRows] = useState([]);
 
-  function toMonthName(monthNumber) {
-    const date = new Date();
-    date.setMonth(monthNumber - 1);
-
-    return date.toLocaleString("en-US", {
-      month: "short",
-    });
-  }
+  const colorTag = (row) => {
+    {
+      let colorTag;
+      switch (row.status) {
+        case "đang đợi gói hàng":
+          colorTag = "yellow";
+          break;
+        case "đã xác nhận":
+          colorTag = "blue";
+          break;
+        case "đang giao hàng":
+          colorTag = "gray";
+          break;
+        case "giao hàng thành công":
+          colorTag = "green";
+          break;
+        case "đã hủy":
+          colorTag = "red";
+          break;
+      }
+      return <Tag color={colorTag}>{row.status}</Tag>;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,17 +48,17 @@ const TableList = () => {
 
       setRows(
         result.data.map((item) => {
-          const monthNumber = toMonthName(
-            new Date(item.created).getMonth() + 1
-          );
           return {
             id: item._id,
             customer: item.user_name,
-            amount: item.details.reduce((acc, i) => {
-              return acc + i.price * i.quantity;
-            }, 0),
-            date: `${new Date(item.created).getDate()} ${monthNumber}`,
+            amount: item.details
+              .reduce((acc, i) => {
+                return acc + i.price * i.quantity;
+              }, 0)
+              .toLocaleString("en-US", { style: "currency", currency: "VND" }),
+            date: `${moment(item.created).utc().format("DD/MM/YYYY")}`,
             method: item.payment_type,
+            receive_date: item.receive_date,
             status: item.state,
           };
         })
@@ -60,6 +77,7 @@ const TableList = () => {
             <TableCell className="tableCell">Date</TableCell>
             <TableCell className="tableCell">Amount</TableCell>
             <TableCell className="tableCell">Payment Method</TableCell>
+            <TableCell className="tableCell">Recive Date</TableCell>
             <TableCell className="tableCell">Status</TableCell>
           </TableRow>
         </TableHead>
@@ -70,11 +88,14 @@ const TableList = () => {
 
               <TableCell className="tableCell">{row.customer}</TableCell>
               <TableCell className="tableCell">{row.date}</TableCell>
-              <TableCell className="tableCell">{row.amount}đ</TableCell>
+              <TableCell className="tableCell">{row.amount}</TableCell>
               <TableCell className="tableCell">{row.method}</TableCell>
               <TableCell className="tableCell">
-                <span className={`status ${row.status}`}>{row.status}</span>
+                {row.receive_date
+                  ? moment(row.receive_date).utc().format("DD/MM/YYYY")
+                  : ""}
               </TableCell>
+              <TableCell className="tableCell">{colorTag(row)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
