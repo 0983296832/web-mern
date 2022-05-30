@@ -6,8 +6,8 @@ const {
   checkRole,
 } = require("../../controller/auth-controller/verify");
 
-route.post("/create/:id", controller.order);
-route.put("/update/:id", controller.update);
-route.get("/get-all", controller.getAll);
+route.post("/create/:id", checkAuth, checkRole, controller.order);
+route.put("/update/:id", checkAuth, checkRole, controller.update);
+route.get("/get-all", checkAuth, checkRole, controller.getAll);
 
 module.exports = route;

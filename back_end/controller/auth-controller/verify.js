@@ -9,7 +9,7 @@ const checkAuth = (req, res, next) => {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     if (verified) next();
   } catch (err) {
-    res.status(400).json({ status: 400, message: "Invalid token" });
+    res.status(400).json({ status: 400, message: err.message });
   }
 };
 const checkRole = (req, res, next) => {
@@ -20,7 +20,7 @@ const checkRole = (req, res, next) => {
     if (role > 1) next();
     else res.status(400).json({ status: 400, message: "you are not admin" });
   } catch (err) {
-    res.status(400).json({ status: 400, message: "Invalid token" });
+    res.status(400).json({ status: 400, message: err.message });
   }
 };
 module.exports = { checkAuth, checkRole };
