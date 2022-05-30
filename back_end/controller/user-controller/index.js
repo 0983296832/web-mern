@@ -8,7 +8,7 @@ const Features = require("../../lib/feature");
 exports.findAll = async (req, res) => {
   try {
     const features = new Features(
-      usersDB.find().populate({ path: "images" }),
+      usersDB.find().populate({ path: "image" }).populate({ path: "orders" }),
       req.query
     )
       .sorting()
@@ -23,6 +23,7 @@ exports.findAll = async (req, res) => {
 
     const users = result[0].status === "fulfilled" ? result[0].value : [];
     const count = result[1].status === "fulfilled" ? result[1].value : 0;
+
     return res.status(200).json({
       status: "200",
       message: "get all user successfully!",
@@ -93,7 +94,10 @@ exports.findById = async (req, res) => {
     });
   }
   try {
-    const data = await usersDB.findById(req.params.id);
+    const data = await usersDB
+      .findById(req.params.id)
+      .populate({ path: "image" })
+      .populate({ path: "orders" });
     return res.status(200).json({
       status: "200",
       message: "get user successfully!",
@@ -197,7 +201,7 @@ exports.upload = async (req, res) => {
     const image = await newImage.save();
     usersDB.findById(id, (err, result) => {
       if (err) {
-        res.status(500).json({
+        return res.status(500).json({
           success: "false",
           message: "can not find product",
         });

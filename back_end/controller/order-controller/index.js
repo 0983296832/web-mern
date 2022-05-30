@@ -102,3 +102,21 @@ exports.getAll = async (req, res) => {
     return res.status(400).json({ status: "400", message: error.message });
   }
 };
+
+exports.update = async (req, res) => {
+  try {
+    if (_.isEmpty(req.body)) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "body can not be empty" });
+    }
+    const order = await ordersDB.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    return res
+      .status(200)
+      .json({ status: "200", message: "success", data: order });
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};

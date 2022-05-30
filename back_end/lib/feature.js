@@ -14,7 +14,7 @@ module.exports = function (query, queryString) {
     const sort = this.queryString.sort || "-created";
     this.query = this.query.sort(sort);
     return this;
-    //localhost:3000/product/get-all?sort=3000
+    //localhost:3000/product/get-all?sort=created
   }; //this.query = Products.find().limit(limit).skip(skip).sort(sort)
 
   this.searching = () => {

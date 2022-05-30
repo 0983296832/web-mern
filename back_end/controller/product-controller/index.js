@@ -8,7 +8,13 @@ const Features = require("../../lib/feature");
 
 exports.getAll = async (req, res) => {
   try {
-    const features = new Features(productsDB.find(), req.query)
+    const features = new Features(
+      productsDB
+        .find()
+        .populate({ path: "image" })
+        .populate({ path: "supplier" }),
+      req.query
+    )
       .sorting()
       .paginating()
       .searching()
@@ -28,6 +34,40 @@ exports.getAll = async (req, res) => {
       data: product,
       count: count,
     });
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+
+exports.getDetail = async (req, res) => {
+  try {
+    const product = await productsDB
+      .findById(req.params.id)
+      .populate({ path: "image" })
+      .populate({ path: "supplier" });
+    return res.status(200).json({
+      status: "200",
+      message: "get product successfully",
+      data: { product },
+    });
+  } catch (error) {
+    return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    if (_.isEmpty(req.body)) {
+      return res
+        .status(400)
+        .json({ status: "400", message: "body can not be empty" });
+    }
+    const data = await productsDB.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    return res
+      .status(200)
+      .json({ status: "200", message: "product updated", data });
   } catch (error) {
     return res.status(400).json({ status: "400", message: error.message });
   }
@@ -108,8 +148,15 @@ exports.uploadProductImage = async (req, res) => {
               message: "can not find product",
             });
           } else {
-            result.image = urls;
-            result.save();
+            if (result.image.length == 0) {
+              result.image = urls;
+              result.save();
+            } else {
+              urls.forEach((url) => {
+                result.image.push(url);
+              });
+              result.save();
+            }
             return res
               .status(200)
               .json({ status: "200", message: "images saved", data: result });
@@ -235,6 +282,7 @@ exports.importProduct = async (req, res) => {
       address: req.body.address,
       phone: req.body.phone,
       email: req.body.email,
+      gender: req.body.gender,
       product_code: req.body.product_code,
       price: req.body.price,
       color: req.body.color,
@@ -248,6 +296,7 @@ exports.importProduct = async (req, res) => {
       name: req.body.name,
       price: req.body.price,
       category: req.body.category,
+      gender: req.body.gender,
       createdAt: Date.now(),
     });
     await newProduct.save();
@@ -298,5 +347,35 @@ exports.getSupplier = async (req, res) => {
     });
   } catch (error) {
     return res.status(400).json({ status: "400", message: error.message });
+  }
+};
+
+exports.updateSupplier = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const supplier = await suppliersDB.findById(id);
+    if (!supplier) {
+      return res
+        .status(400)
+        .json({ status: "400", message: "can not find supplier" });
+    }
+    const result = await suppliersDB.updateOne(
+      { _id: id },
+      {
+        $set: {
+          name: req.body.name,
+          address: req.body.address,
+          phone: req.body.phone,
+        },
+      },
+      { new: true }
+    );
+    return res.status(200).json({
+      status: "200",
+      message: "update supplier successfully",
+      data: result,
+    });
+  } catch (err) {
+    return res.status(400).json({ status: "400", message: err.message });
   }
 };

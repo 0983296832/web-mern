@@ -75,7 +75,9 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ status: 400, message: error.details[0].message, result: [] });
 
-    const user = await usersDB.findOne({ email: req.body.email });
+    const user = await usersDB
+      .findOne({ email: req.body.email })
+      .populate({ path: "image" });
     if (!user) {
       return res
         .status(400)
@@ -88,7 +90,7 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ status: 400, message: "Password incorrect", result: [] });
 
-    const { _id, name, email, role, ...rest } = user;
+    const { _id, name, email, role, image, ...rest } = user;
 
     //create token
     const token = jwt.sign(
@@ -99,7 +101,7 @@ exports.login = async (req, res) => {
       }
     );
     const refreshToken = jwt.sign(
-      { _id, name, email, role },
+      { _id, name, email, role, image: image.imageUrl },
       process.env.TOKEN_REFRESH,
       {
         expiresIn: "365d",
@@ -115,9 +117,13 @@ exports.login = async (req, res) => {
     });
 
     return res.status(200).json({
-      status: 400,
+      status: 200,
       message: "login success",
-      result: { token, refreshToken },
+      result: {
+        token,
+        refreshToken,
+        data: { _id, name, email, role, image: image.imageUrl },
+      },
     });
   }
 };

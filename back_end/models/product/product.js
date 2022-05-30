@@ -23,14 +23,21 @@ const productSchema = new mongoose.Schema({
   },
   views: {
     type: Number,
+    default: 0,
   },
   sales: {
     type: Number,
+    default: 0,
+  },
+  votes: {
+    type: Number,
+    default: 0,
   },
   discount: {
     type: Number,
+    default: 0,
   },
-  supplier: [{ type: mongoose.Schema.Types.ObjectId, ref: "supplier" }],
+  supplier: [{ type: mongoose.Schema.Types.ObjectId, ref: "suppliers" }],
   createdAt: { type: Date },
 });
 
