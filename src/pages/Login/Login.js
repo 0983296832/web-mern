@@ -23,10 +23,10 @@ const Login = () => {
   const onLogin = async (data) => {
     try {
       const res = await Auth.login(data);
-      console.log(res);
-      setAuth(res.result);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(res));
+      setAuth(res);
       navigate("/");
-      Toast("success", "Login Success");
+      Toast("success", "login success");
     } catch (error) {
       Toast("error", error.message);
     }

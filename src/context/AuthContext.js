@@ -1,14 +1,13 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 import { LOCAL_STORAGE_USER_KEY } from "../constant/constant";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState(() => {
-    const localStorageItem = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+    const localStorageItem = localStorage.getItem(LOCAL_STORAGE_USER_KEY);  
     return localStorageItem ? JSON.parse(localStorageItem) : {};
   });
-
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
       {children}
